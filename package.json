@@ -1,0 +1,32 @@
+{
+  "name": "demoblaze_automation",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "clean:test-results": "rimraf test-results playwright-report",
+    "pretest": "npm run clean:test-results",
+    "test": "playwright test",
+    "test:login": "playwright test src/tests/login.spec.ts",
+    "test:cart": "playwright test src/tests/cart.spec.ts",
+    "test:login:clean": "npm run clean:test-results && playwright test src/tests/login.spec.ts",
+    "test:login:report": "npm run test:login && playwright show-report",
+    "test:login:debug": "playwright test src/tests/login.spec.ts --debug",
+    "test:login:headed": "playwright test src/tests/login.spec.ts --headed",
+    "report": "playwright show-report"
+  },
+  "keywords": [
+    "playwright",
+    "testing",
+    "automation",
+    "e2e"
+  ],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@playwright/test": "^1.51.1",
+    "@types/node": "^22.13.13",
+    "dotenv": "^16.4.7",
+    "rimraf": "^6.0.1"
+  }
+}
