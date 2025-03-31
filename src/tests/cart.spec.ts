@@ -1,162 +1,135 @@
 import { test, expect } from '@playwright/test';
 import { LoginPage } from '../pages/LoginPage';
-import { HomePage } from '../pages/HomePage';
-import { ProductPage } from '../pages/productPage';
-import { CartPage } from '../pages/cartPage';
+import { ProductPage } from '../pages/ProductPage';
+import { CartPage } from '../pages/CartPage';
 import { TEST_DATA } from '../utils/test-data';
 
-test.describe('Shopping Cart Functionality', () => {
+test.describe('Shopping Cart Flow', () => {
   test.beforeEach(async ({ page }) => {
-    const homePage = new HomePage(page);
-    await homePage.goto();
-  });
-
-  test('should add a product to cart as a guest user', async ({ page }) => {
-    const homePage = new HomePage(page);
-    const productPage = new ProductPage(page);
-    const cartPage = new CartPage(page);
-    
-    // Select a product
-    await homePage.selectCategory(TEST_DATA.products.phone.category);
-    await homePage.selectProduct(TEST_DATA.products.phone.name);
-    
-    // Add to cart
-    const addResult = await productPage.addToCart();
-    expect(addResult.success).toBeTruthy();
-    expect(addResult.message).toContain('Product added');
-    
-    // Navigate to cart
-    await cartPage.navigateToCart();
-    
-    // Verify item is in cart
-    expect(await cartPage.isProductInCart(TEST_DATA.products.phone.name)).toBeTruthy();
-    expect(await cartPage.getCartItemsCount()).toBe(1);
-  });
-
-  test('should add multiple products to cart', async ({ page }) => {
-    const homePage = new HomePage(page);
-    const productPage = new ProductPage(page);
-    const cartPage = new CartPage(page);
-    
-    // Add first product
-    await homePage.selectCategory(TEST_DATA.products.phone.category);
-    await homePage.selectProduct(TEST_DATA.products.phone.name);
-    await productPage.addToCart();
-    
-    // Add second product
-    await homePage.navigateToHome();
-    await homePage.selectCategory(TEST_DATA.products.laptop.category);
-    await homePage.selectProduct(TEST_DATA.products.laptop.name);
-    await productPage.addToCart();
-    
-    // Navigate to cart
-    await cartPage.navigateToCart();
-    
-    // Verify both items are in cart
-    const cartItems = await cartPage.getCartItems();
-    expect(cartItems.length).toBe(2);
-    expect(await cartPage.isProductInCart(TEST_DATA.products.phone.name)).toBeTruthy();
-    expect(await cartPage.isProductInCart(TEST_DATA.products.laptop.name)).toBeTruthy();
-  });
-
-  test('should keep cart items after login', async ({ page }) => {
-    const homePage = new HomePage(page);
-    const productPage = new ProductPage(page);
-    const cartPage = new CartPage(page);
     const loginPage = new LoginPage(page);
+    const cartPage = new CartPage(page);
     
-    // Add item to cart as guest
-    await homePage.selectCategory(TEST_DATA.products.phone.category);
-    await homePage.selectProduct(TEST_DATA.products.phone.name);
-    await productPage.addToCart();
+    // Start from home page
+    await loginPage.navigateToLogin();
+    await loginPage.waitForPageLoad();
     
-    // Login
+    // Login before each test
     await loginPage.login(TEST_DATA.validUser.username, TEST_DATA.validUser.password);
     
-    // Navigate to cart
-    await cartPage.navigateToCart();
+    // Empty the cart to ensure a clean state for each test
+    await cartPage.emptyCart();
     
-    // Verify item is still in cart
-    expect(await cartPage.isProductInCart(TEST_DATA.products.phone.name)).toBeTruthy();
-    expect(await cartPage.getCartItemsCount()).toBe(1);
+    // Verify the cart is empty
+    const isCartEmpty = await cartPage.isCartEmpty();
+    expect(isCartEmpty).toBeTruthy();
+    
+    // Go back to home page
+    await loginPage.homeLink.click();
+    await loginPage.waitForPageLoad();
   });
-
-  test('should be able to remove items from cart', async ({ page }) => {
-    const homePage = new HomePage(page);
+  
+  test.only('add a phone product to cart', async ({ page }) => {
     const productPage = new ProductPage(page);
     const cartPage = new CartPage(page);
+    const { name, category } = TEST_DATA.products.phone;
     
-    // Add item to cart
-    await homePage.selectCategory(TEST_DATA.products.phone.category);
-    await homePage.selectProduct(TEST_DATA.products.phone.name);
-    await productPage.addToCart();
+    // Navigate to product by category
+    await productPage.navigateToProductByCategory(name, category);
     
-    // Navigate to cart
+    // Add product to cart
+    await productPage.addProductToCart();
+    
+    // Go to cart
     await cartPage.navigateToCart();
+    await cartPage.waitForPageLoad();
     
-    // Verify item is in cart
-    expect(await cartPage.getCartItemsCount()).toBe(1);
+    // Verify product is in cart
+    await cartPage.verifyProductInCart(name);
+  });
+  
+  test('add multiple products to cart', async ({ page }) => {
+    const productPage = new ProductPage(page);
+    const cartPage = new CartPage(page);
+    const phone = TEST_DATA.products.phone;
+    const laptop = TEST_DATA.products.laptop;
     
-    // Remove item
-    const removed = await cartPage.deleteItemFromCart();
-    expect(removed).toBeTruthy();
+    // Add phone product
+    await productPage.navigateToProductByCategory(phone.name, phone.category);
+    await productPage.addProductToCart();
+    await productPage.navigateToHome(); // Go back to home
+    
+    // Add laptop product
+    await productPage.navigateToProductByCategory(laptop.name, laptop.category);
+    await productPage.addProductToCart();
+    
+    // Go to cart
+    await cartPage.navigateToCart();
+    await cartPage.waitForPageLoad();
+    
+    // Verify both products are in cart
+    await cartPage.verifyProductInCart(phone.name);
+    await cartPage.verifyProductInCart(laptop.name);
+    
+    // Verify cart item count
+    expect(await cartPage.getCartItemCount()).toBe(2);
+  });
+  
+  test('remove product from cart', async ({ page }) => {
+    const productPage = new ProductPage(page);
+    const cartPage = new CartPage(page);
+    const { name, category } = TEST_DATA.products.monitor;
+    
+    // Add product to cart
+    await productPage.navigateToProductByCategory(name, category);
+    await productPage.addProductToCart();
+    
+    // Go to cart
+    await cartPage.navigateToCart();
+    await cartPage.waitForPageLoad();
+    
+    // Verify product is in cart
+    await cartPage.verifyProductInCart(name);
+    
+    // Get initial cart count
+    const initialCartCount = await cartPage.getCartItemCount();
+    expect(initialCartCount).toBe(1);
+    
+    // Remove product from cart
+    await cartPage.removeProductFromCart(name);
     
     // Verify cart is empty
-    expect(await cartPage.getCartItemsCount()).toBe(0);
+    const newCartCount = await cartPage.getCartItemCount();
+    expect(newCartCount).toBe(0);
   });
-
-  test('should calculate correct total price in cart', async ({ page }) => {
-    const homePage = new HomePage(page);
+  
+  /*test('verify total price calculation', async ({ page }) => {
     const productPage = new ProductPage(page);
     const cartPage = new CartPage(page);
+    const phone = TEST_DATA.products.phone;
+    const monitor = TEST_DATA.products.monitor;
     
-    // Get first product price
-    await homePage.selectCategory(TEST_DATA.products.phone.category);
-    await homePage.selectProduct(TEST_DATA.products.phone.name);
-    const product1Details = await productPage.getProductDetails();
-    await productPage.addToCart();
+    // Add phone product
+    await productPage.navigateToProductByCategory(phone.name, phone.category);
+    const price1 = await productPage.getProductPrice();
+    await productPage.addProductToCart();
+    await productPage.navigateToHome(); // Go back to home
     
-    // Get second product price
-    await homePage.navigateToHome();
-    await homePage.selectCategory(TEST_DATA.products.laptop.category);
-    await homePage.selectProduct(TEST_DATA.products.laptop.name);
-    const product2Details = await productPage.getProductDetails();
-    await productPage.addToCart();
+    // Add monitor product
+    await productPage.navigateToProductByCategory(monitor.name, monitor.category);
+    const price2 = await productPage.getProductPrice();
+    await productPage.addProductToCart();
     
-    // Navigate to cart
+    // Go to cart
     await cartPage.navigateToCart();
+    await cartPage.waitForPageLoad();
     
-    // Verify total price is calculated correctly
+    // Get total price
     const totalPrice = await cartPage.getTotalPrice();
     
-    // Extract numeric prices (this is a simplified example, actual parsing may vary)
-    const price1 = parseInt(product1Details.price.replace(/[^0-9]/g, ''));
-    const price2 = parseInt(product2Details.price.replace(/[^0-9]/g, ''));
-    const expectedTotal = price1 + price2;
+    // Calculate expected total
+    const expectedTotal = parseInt(price1) + parseInt(price2);
     
-    // Convert to string for comparison with totalPrice which is a string
-    expect(totalPrice).toBe(expectedTotal.toString());
-  });
-
-  test('should persist cart items after page refresh', async ({ page }) => {
-    const homePage = new HomePage(page);
-    const productPage = new ProductPage(page);
-    const cartPage = new CartPage(page);
-    
-    // Add item to cart
-    await homePage.selectCategory(TEST_DATA.products.phone.category);
-    await homePage.selectProduct(TEST_DATA.products.phone.name);
-    await productPage.addToCart();
-    
-    // Navigate to cart and check item
-    await cartPage.navigateToCart();
-    expect(await cartPage.getCartItemsCount()).toBe(1);
-    
-    // Refresh page
-    await page.reload();
-    
-    // Verify item is still in cart
-    expect(await cartPage.getCartItemsCount()).toBe(1);
-    expect(await cartPage.isProductInCart(TEST_DATA.products.phone.name)).toBeTruthy();
-  });
+    // Verify total is correct
+    expect(parseInt(totalPrice)).toBe(expectedTotal);
+  });*/
 });

@@ -24,18 +24,36 @@ export class ProductPage extends BasePage {
       price: await this.productPrice.textContent()
     };
   }
-
-  async addToCart() {
-    // Set up alert listener before clicking "Add to cart"
-    const alertPromise = waitForAlert(this.page);
+  async navigateToProductByCategory(name: string, category: string): Promise<void> {
+    // Click on the category in the left sidebar
+    const categoryLink = this.page.locator(`#itemc`).filter({ hasText: category });
+    await categoryLink.click();
     
+    // Wait for the category page to load and products to be displayed
+    await this.page.waitForSelector('.card-title');
+    
+    // Find and click on the specific product by name
+    const productLink = this.page.locator('.card-title a').filter({ hasText: name });
+    await productLink.click();
+    
+    // Wait for the product details page to load
+    await this.page.waitForSelector('.product-deatil', { state: 'visible' });
+  }
+  async addProductToCart() {
+    const productName = await this.productTitle.textContent();
     await this.addToCartButton.click();
     
-    // Wait for and handle the alert
-    const alertText = await alertPromise;
-    return {
-      success: alertText.includes('Product added'),
-      message: alertText
-    };
+    // Handle alert - this site uses window.alert for confirmation
+    await this.page.on('dialog', async dialog => {
+      expect(dialog.type()).toBe('alert');
+      await dialog.accept();
+    });
   }
+
+async getProductPrice(): Promise<number> {
+  const priceText = await this.page.locator('h5').textContent(); // Adjust the selector as needed
+  const price = priceText ? parseInt(priceText.replace(/[^0-9]/g, '')) : 0;
+  return price;
+}
+
 }

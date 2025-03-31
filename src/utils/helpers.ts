@@ -2,7 +2,7 @@ import { Page } from '@playwright/test';
 
 export async function waitForAlert(page: Page): Promise<string> {
   return new Promise(resolve => {
-    page.on('dialog', dialog => {
+    page.once('dialog', dialog => {  
       const message = dialog.message();
       dialog.accept();
       resolve(message);

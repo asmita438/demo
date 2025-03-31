@@ -23,6 +23,10 @@ export class BasePage {
     await this.page.goto('/');
   }
 
+  async waitForPageLoad() {
+    await this.page.waitForLoadState('domcontentloaded');
+  }
+
   async navigateToHome() {
     await this.homeLink.click();
     await this.page.waitForLoadState('domcontentloaded');
