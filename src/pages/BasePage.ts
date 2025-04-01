@@ -38,8 +38,9 @@ export class BasePage {
   }
 
   async navigateToCart() {
-    await this.cartLink.click();
-    await this.page.waitForLoadState('domcontentloaded');
+  const cartNavLink = this.page.locator("//a[text()='Cart']");
+  await cartNavLink.click();
+  await this.page.waitForLoadState('domcontentloaded');
   }
 
   async navigateToSignUp() {

@@ -39,19 +39,33 @@ export class ProductPage extends BasePage {
     // Wait for the product details page to load
     await this.page.waitForSelector('.product-deatil', { state: 'visible' });
   }
-  async addProductToCart() {
+
+  async addProductToCart(): Promise<void> {
+    // Click 'Add to cart' button
+    await this.addToCartButton.click();
+  
+    // Wait for the confirmation alert to appear
+    /*this.page.once('dialog', async (dialog) => {
+      console.log(`Dialog message: ${dialog.message()}`);
+      await dialog.accept();
+    });*/
+  
+    // Small delay to ensure product is registered in cart
+    await this.page.waitForTimeout(1000);
+  }
+  /*async addProductToCart() {
     const productName = await this.productTitle.textContent();
     await this.addToCartButton.click();
     
-    // Handle alert - this site uses window.alert for confirmation
+    
     await this.page.on('dialog', async dialog => {
       expect(dialog.type()).toBe('alert');
       await dialog.accept();
     });
-  }
+  }*/
 
 async getProductPrice(): Promise<number> {
-  const priceText = await this.page.locator('h5').textContent(); // Adjust the selector as needed
+  const priceText = await this.page.locator('h3.price-container').textContent(); 
   const price = priceText ? parseInt(priceText.replace(/[^0-9]/g, '')) : 0;
   return price;
 }

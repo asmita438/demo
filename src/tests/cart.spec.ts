@@ -15,11 +15,15 @@ test.describe('Shopping Cart Flow', () => {
     
     // Login before each test
     await loginPage.login(TEST_DATA.validUser.username, TEST_DATA.validUser.password);
+
+    await cartPage.refreshCart();
     
     // Empty the cart to ensure a clean state for each test
     await cartPage.emptyCart();
     
     // Verify the cart is empty
+    
+  
     const isCartEmpty = await cartPage.isCartEmpty();
     expect(isCartEmpty).toBeTruthy();
     
@@ -28,7 +32,7 @@ test.describe('Shopping Cart Flow', () => {
     await loginPage.waitForPageLoad();
   });
   
-  test.only('add a phone product to cart', async ({ page }) => {
+  test('add a phone product to cart', async ({ page }) => {
     const productPage = new ProductPage(page);
     const cartPage = new CartPage(page);
     const { name, category } = TEST_DATA.products.phone;
@@ -74,7 +78,7 @@ test.describe('Shopping Cart Flow', () => {
     expect(await cartPage.getCartItemCount()).toBe(2);
   });
   
-  test('remove product from cart', async ({ page }) => {
+  test.only('remove product from cart', async ({ page }) => {
     const productPage = new ProductPage(page);
     const cartPage = new CartPage(page);
     const { name, category } = TEST_DATA.products.monitor;
@@ -102,7 +106,7 @@ test.describe('Shopping Cart Flow', () => {
     expect(newCartCount).toBe(0);
   });
   
-  /*test('verify total price calculation', async ({ page }) => {
+  test('verify total price calculation', async ({ page }) => {
     const productPage = new ProductPage(page);
     const cartPage = new CartPage(page);
     const phone = TEST_DATA.products.phone;
@@ -122,14 +126,15 @@ test.describe('Shopping Cart Flow', () => {
     // Go to cart
     await cartPage.navigateToCart();
     await cartPage.waitForPageLoad();
+    await cartPage.waitForCartItems();
     
     // Get total price
     const totalPrice = await cartPage.getTotalPrice();
     
     // Calculate expected total
-    const expectedTotal = parseInt(price1) + parseInt(price2);
+    const expectedTotal = price1 + price2;
     
     // Verify total is correct
     expect(parseInt(totalPrice)).toBe(expectedTotal);
-  });*/
+  });
 });
