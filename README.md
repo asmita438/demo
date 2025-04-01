@@ -12,7 +12,6 @@ This project contains automated tests for demoblaze.com e-commerce website, focu
 
 ## Project Structure
 
-```
 ├── tests/                 # Test files
 │   ├── login.spec.ts      # Login flow tests
 │   └── cart.spec.ts       # Shopping cart tests
@@ -25,8 +24,9 @@ This project contains automated tests for demoblaze.com e-commerce website, focu
 │   └── test-data.ts       # Test data (users, products) 
     └── helpers.ts         # Helper functions
 ├── playwright.config.ts   # Playwright configuration
+├── .env                   # Stores environment variables such as URL and credentials
+├── .env.example           # Template for adding your own user credentials
 └── package.json           # Project dependencies
-```
 
 ## Setup Instructions
 
@@ -46,6 +46,13 @@ This project contains automated tests for demoblaze.com e-commerce website, focu
    # Install browsers
    npx playwright install
    ```
+
+3. **Configure Environment Variables**
+   ```
+   # Copy the .env.example to .env and fill in your user credentials and site URL:
+   cp .env.example .env
+   ```
+
 
 3. **Running Tests**
    ```bash
