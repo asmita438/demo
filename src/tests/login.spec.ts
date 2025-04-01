@@ -10,7 +10,7 @@ test.describe('Login Functionality', () => {
     await homePage.goto();
   });
 
-  test.only('should login successfully with valid credentials', async ({ page }) => {
+  test('should login successfully with valid credentials', async ({ page }) => {
     const loginPage = new LoginPage(page);
     
     const result = await loginPage.login(TEST_DATA.validUser.username, TEST_DATA.validUser.password);
