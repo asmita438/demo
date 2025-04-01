@@ -78,7 +78,7 @@ test.describe('Shopping Cart Flow', () => {
     expect(await cartPage.getCartItemCount()).toBe(2);
   });
   
-  test.only('remove product from cart', async ({ page }) => {
+  test('remove product from cart', async ({ page }) => {
     const productPage = new ProductPage(page);
     const cartPage = new CartPage(page);
     const { name, category } = TEST_DATA.products.monitor;
